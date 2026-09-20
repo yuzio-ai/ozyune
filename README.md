@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="design/ozyune-logo-draft-02.png" width="180" alt="Ozyune logo">
+  <img src="design/ozyune-logo.png" width="180" alt="Ozyune logo">
 </p>
 
 <h1 align="center">Ozyune</h1>
@@ -81,10 +81,9 @@ Ozyune/
 │   ├── pull_request_template.md
 │   └── workflows/build.yml
 ├── design/
-│   └── ozyune-logo-draft-02.png
+│   └── ozyune-logo.png
 ├── docs/
-│   ├── architecture.md
-│   └── github-repo-init.md
+│   └── architecture.md
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
 │   ├── AppDelegate.swift
@@ -95,6 +94,7 @@ Ozyune/
 │   ├── OzyuneProcessManager.swift
 │   └── OzyuneWebView.swift
 ├── CONTRIBUTING.md
+├── LICENSE
 └── README.md
 ```
 
@@ -120,4 +120,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 
-No open-source license has been selected yet.
+Ozyune is released under the [MIT License](LICENSE).

@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible problem in Ozyune
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting a problem. Please keep the report focused and reproducible.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "e.g. macOS 26.0"
+    validations:
+      required: true
+  - type: input
+    id: ozyune
+    attributes:
+      label: Ozyune version / commit
+      placeholder: "e.g. 0.1.0 or commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: dsh
+    attributes:
+      label: dsh version
+      placeholder: "If known"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Launch Ozyune
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Remove credentials, tokens, private paths, and other sensitive information before posting.

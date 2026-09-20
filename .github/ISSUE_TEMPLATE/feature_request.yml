@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a focused improvement to the Ozyune native shell
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete limitation are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful version of the change.
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Where should this capability live?
+      options:
+        - Native Ozyune shell
+        - dsh Web UI
+        - dsh runtime / host
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why should Ozyune own this?
+      description: For native-shell proposals, explain why the capability should not remain entirely in dsh Web.

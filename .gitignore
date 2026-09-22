@@ -1,6 +1,10 @@
 # macOS
 .DS_Store
 
+# Distribution artifacts
+Ozyune.app/
+Ozyune-*.zip
+
 # Editors
 *.swp
 

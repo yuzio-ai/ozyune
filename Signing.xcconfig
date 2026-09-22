@@ -1,0 +1,12 @@
+// Ozyune target-level base configuration (committed to git).
+//
+// Local-only overrides — such as your Apple DEVELOPMENT_TEAM — go in
+// `Local.xcconfig` in this same directory. That file is gitignored, so
+// personal signing identities never reach the repository. Example:
+//
+//     DEVELOPMENT_TEAM = ABCDE12345
+//
+// The `#include?` below is optional: when Local.xcconfig is missing
+// (e.g. a fresh clone), the build just uses no team.
+
+#include? "Local.xcconfig"

@@ -5,7 +5,7 @@ import Foundation
 final class OzyuneProcessManager: ObservableObject {
     static let shared = OzyuneProcessManager()
 
-    enum State {
+    enum State: Equatable {
         case idle
         case starting
         case running(URL)

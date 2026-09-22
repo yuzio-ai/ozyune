@@ -13,6 +13,7 @@
 		A10000000000000000000004 /* OzyuneProcessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* OzyuneProcessManager.swift */; };
 		A10000000000000000000005 /* OzyuneWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000005 /* OzyuneWebView.swift */; };
 		A10000000000000000000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* Assets.xcassets */; };
+		A10000000000000000000007 /* StartupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* StartupView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		B10000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B10000000000000000000007 /* Ozyune.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ozyune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B10000000000000000000009 /* StartupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 				B10000000000000000000001 /* OzyuneApp.swift */,
 				B10000000000000000000002 /* AppDelegate.swift */,
 				B10000000000000000000003 /* ContentView.swift */,
+				B10000000000000000000009 /* StartupView.swift */,
 				B10000000000000000000004 /* OzyuneProcessManager.swift */,
 				B10000000000000000000005 /* OzyuneWebView.swift */,
 				B10000000000000000000006 /* Info.plist */,
@@ -139,6 +142,7 @@
 				A10000000000000000000001 /* OzyuneApp.swift in Sources */,
 				A10000000000000000000002 /* AppDelegate.swift in Sources */,
 				A10000000000000000000003 /* ContentView.swift in Sources */,
+				A10000000000000000000007 /* StartupView.swift in Sources */,
 				A10000000000000000000004 /* OzyuneProcessManager.swift in Sources */,
 				A10000000000000000000005 /* OzyuneWebView.swift in Sources */,
 			);
@@ -265,6 +269,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -289,6 +294,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;

@@ -7,17 +7,13 @@ struct ContentView: View {
         Group {
             switch processManager.state {
             case .idle, .starting:
-                VStack(spacing: 12) {
-                    ProgressView()
-                        .controlSize(.large)
-                    Text("Starting Ozyune…")
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                StartupView()
+                    .transition(.opacity)
 
             case .running(let url):
                 OzyuneWebView(url: url)
                     .ignoresSafeArea()
+                    .transition(.opacity)
 
             case .failed(let message):
                 VStack(spacing: 16) {
@@ -43,9 +39,11 @@ struct ContentView: View {
                 }
                 .padding(32)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
             }
         }
         .frame(minWidth: 900, minHeight: 600)
+        .animation(.easeInOut(duration: 0.35), value: processManager.state)
         .task {
             processManager.start()
         }

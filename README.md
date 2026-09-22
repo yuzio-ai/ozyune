@@ -28,16 +28,37 @@ Ozyune does **not** reimplement the dsh interface or agent runtime. The goal is 
 
 ## Current status
 
-**Early development / v0.1**
+**v1.0.0 — first public build**
 
 The current build is intentionally minimal. There is no native session list, menu-bar companion, bundled Node runtime, updater, or custom dsh UI.
+
+## Prerequisites: install DeepSeek Harness first
+
+> **Important** — Ozyune is only a shell. It does **not** bundle the dsh
+> runtime, so you must have [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh)
+> downloaded and installed on your Mac **before** launching Ozyune.
+
+Install it globally with npm (requires Node.js 18 or later):
+
+```bash
+npm install --global @deepseek-ai/dsh
+```
+
+Then verify the installation:
+
+```bash
+dsh --version
+```
+
+Ozyune starts dsh through your login shell (`npx --yes @deepseek-ai/dsh web --no-open --port 0`). A pre-installed dsh makes startup near-instant; without it, the first launch blocks while `npx` downloads the package and may fail on slow or restricted networks.
 
 ## Requirements
 
 - macOS 14 or later
-- Xcode 16 or later recommended
-- Node.js and `npx` available in the user's shell environment
+- DeepSeek Harness installed (see above)
+- Node.js and `npm` / `npx` available in the user's shell environment
 - network access when `npx` needs to resolve or download `@deepseek-ai/dsh`
+- Xcode 16 or later — only if you build from source
 
 ## Run locally
 
@@ -54,6 +75,16 @@ npx --yes @deepseek-ai/dsh web --no-open --port 0
 ```
 
 It waits for the dsh ready URL, then loads that URL directly inside `WKWebView`. No external browser is opened.
+
+### Signing for local builds
+
+The project signs automatically, but your Apple Developer Team ID is kept out of git. After a fresh clone, create `Local.xcconfig` in the repository root (it is gitignored):
+
+```
+DEVELOPMENT_TEAM = <your-team-id>
+```
+
+`Signing.xcconfig` includes this file optionally; without it the build just uses no team.
 
 ## Architecture
 
@@ -89,10 +120,14 @@ Ozyune/
 │   ├── AppDelegate.swift
 │   ├── Assets.xcassets/
 │   ├── ContentView.swift
+│   ├── DshOutputInterpreter.swift
 │   ├── Info.plist
 │   ├── OzyuneApp.swift
 │   ├── OzyuneProcessManager.swift
-│   └── OzyuneWebView.swift
+│   ├── OzyuneWebView.swift
+│   └── StartupView.swift
+├── Signing.xcconfig          # committed; includes Local.xcconfig optionally
+├── Local.xcconfig            # gitignored; your DEVELOPMENT_TEAM lives here
 ├── CONTRIBUTING.md
 ├── LICENSE
 └── README.md

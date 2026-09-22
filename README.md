@@ -12,6 +12,10 @@
   <strong>Native launch. Embedded Web UI. Minimal surface.</strong>
 </p>
 
+<p align="center">
+  English | <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 ## Overview
 
 Ozyune is a small macOS application that wraps the existing `dsh web` experience in a native app window.

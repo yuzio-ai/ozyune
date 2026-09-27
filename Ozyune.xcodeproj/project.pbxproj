@@ -15,6 +15,8 @@
 		A10000000000000000000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* Assets.xcassets */; };
 		A10000000000000000000007 /* StartupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* StartupView.swift */; };
 		A1000000000000000000000A /* DshOutputInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000A /* DshOutputInterpreter.swift */; };
+		A1000000000000000000000B /* AgentSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* AgentSignal.swift */; };
+		A1000000000000000000000C /* NotificationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000D /* NotificationController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +31,8 @@
 		B10000000000000000000009 /* StartupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupView.swift; sourceTree = "<group>"; };
 		B1000000000000000000000A /* DshOutputInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DshOutputInterpreter.swift; sourceTree = "<group>"; };
 		B1000000000000000000000B /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		B1000000000000000000000C /* AgentSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSignal.swift; sourceTree = "<group>"; };
+		B1000000000000000000000D /* NotificationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,8 @@
 				B10000000000000000000009 /* StartupView.swift */,
 				B10000000000000000000004 /* OzyuneProcessManager.swift */,
 				B1000000000000000000000A /* DshOutputInterpreter.swift */,
+				B1000000000000000000000C /* AgentSignal.swift */,
+				B1000000000000000000000D /* NotificationController.swift */,
 				B10000000000000000000005 /* OzyuneWebView.swift */,
 				B10000000000000000000006 /* Info.plist */,
 				B10000000000000000000008 /* Assets.xcassets */,
@@ -150,6 +156,8 @@
 				A10000000000000000000007 /* StartupView.swift in Sources */,
 				A10000000000000000000004 /* OzyuneProcessManager.swift in Sources */,
 				A1000000000000000000000A /* DshOutputInterpreter.swift in Sources */,
+				A1000000000000000000000B /* AgentSignal.swift in Sources */,
+				A1000000000000000000000C /* NotificationController.swift in Sources */,
 				A10000000000000000000005 /* OzyuneWebView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

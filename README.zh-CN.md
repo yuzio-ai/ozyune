@@ -20,10 +20,11 @@
 
 Ozyune 是一个小型 macOS 应用，把现有的 `dsh web` 体验装进原生应用窗口。
 
-第一个版本刻意只做三件事：
+第一个版本刻意只做四件事：
 
 - 启动 Ozyune 时拉起 `dsh web --no-open --port 0`；
 - 在原生 `WKWebView` 中显示 dsh Web UI；
+- 任务完成或需要你判断时，推送 macOS 系统通知；
 - 退出 App 时停止由它管理的 dsh 进程。
 
 Ozyune **不会**重新实现 dsh 的界面或 agent 运行时。目标是让原生外壳保持轻薄，Web 应用和运行时行为继续由 dsh 自己负责。
@@ -98,12 +99,32 @@ Ozyune.app
 │   ├── 检测就绪 URL
 │   └── 负责进程清理
 │
-└── OzyuneWebView
-    └── WKWebView
-        └── dsh Web UI
+├── OzyuneWebView
+│   └── WKWebView
+│       └── dsh Web UI
+│
+└── AgentSignal + NotificationController
+    └── macOS 系统通知
 ```
 
 关于当前的边界与生命周期规则，见 [`docs/architecture.md`](docs/architecture.md)。
+
+## 系统通知
+
+跑长任务时不必盯着窗口。Ozyune 会在需要你介入时、以及一次运行**不是由你主动结束**时推送 macOS 系统通知：
+
+- **需要你的判断** —— 权限批准提示、`ask_user_question` 提问、`exit_plan_mode` 计划评审；
+- **任务完成** —— agent 跑完当前任务、回到空闲；
+- **运行失败** —— 因模型或运行时错误而结束；
+- **提前停止** —— 未跑完就结束（步骤被拒绝，或触到输出 token 上限）。
+
+由你自己造成的结束（按下停止，或 hook / 退出导致的取消）刻意不推送。
+
+点击通知会激活 Ozyune 并把窗口置前。推送时机在 **Ozyune → Settings…** 中配置（默认仅当 Ozyune 不在前台时推送；也可选「始终」或「关闭」）。首次启动会请求通知权限；如果从未收到通知，请在 **系统设置 → 通知** 中允许 Ozyune。设置页里的 **Send Test Notification** 按钮可以随时验证整条通知链路。
+
+> **注意**：本地构建必须开启代码签名（即配置好 `Local.xcconfig` 的 `DEVELOPMENT_TEAM`）。macOS 的通知服务不接受 ad-hoc / 无签名的应用——这类构建下授权弹窗会静默不出现，通知也不会送达。CI 的 `CODE_SIGNING_ALLOWED=NO` 构建仅用于编译检查。
+
+信号来自 dsh Web UI 与 Host 之间的实时 WebSocket 事件（只读旁路观测，不改动 dsh 配置）。这些信号依赖的 dsh wire 词汇表由 `scripts/check-signal-classifier.sh` 用真实帧 fixture 固定，并已接入 CI。调试时可以用 `OZYUNE_DEBUG_SIGNALS=1` 启动 Ozyune，把命中的帧与分类结果打到 Console。
 
 ## 项目结构
 
@@ -119,11 +140,13 @@ Ozyune/
 │   └── architecture.md
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
+│   ├── AgentSignal.swift
 │   ├── AppDelegate.swift
 │   ├── Assets.xcassets/
 │   ├── ContentView.swift
 │   ├── DshOutputInterpreter.swift
 │   ├── Info.plist
+│   ├── NotificationController.swift
 │   ├── OzyuneApp.swift
 │   ├── OzyuneProcessManager.swift
 │   ├── OzyuneWebView.swift

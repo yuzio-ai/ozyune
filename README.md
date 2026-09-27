@@ -20,10 +20,11 @@
 
 Ozyune is a small macOS application that wraps the existing `dsh web` experience in a native app window.
 
-The first version intentionally does only three things:
+The first version intentionally does only four things:
 
 - launches `dsh web --no-open --port 0` when Ozyune starts;
 - displays the dsh Web UI inside a native `WKWebView`;
+- posts macOS system notifications when a task finishes or the agent needs your judgment;
 - stops the dsh process managed by Ozyune when the app quits.
 
 Ozyune does **not** reimplement the dsh interface or agent runtime. The goal is to keep the native shell thin and let dsh continue to own its Web application and runtime behavior.
@@ -100,12 +101,32 @@ Ozyune.app
 │   ├── detects the ready URL
 │   └── owns process teardown
 │
-└── OzyuneWebView
-    └── WKWebView
-        └── dsh Web UI
+├── OzyuneWebView
+│   └── WKWebView
+│       └── dsh Web UI
+│
+└── AgentSignal + NotificationController
+    └── macOS system notifications
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for the current boundary and lifecycle rules.
+
+## System notifications
+
+You don't have to watch the window during long runs. Ozyune posts a macOS system notification when the agent needs you, and when a run ends in a way you didn't ask for:
+
+- **Needs your judgment** — a permission approval, an `ask_user_question` prompt, or an `exit_plan_mode` plan review;
+- **Task complete** — the agent finished the current run and is idle again;
+- **Run failed** — the run ended on a model or runtime error;
+- **Stopped early** — the run ended without finishing (a rejected step, or an output-token ceiling).
+
+Ends you caused yourself — pressing stop, or a hook or teardown cancelling the run — stay silent on purpose.
+
+Clicking a notification activates Ozyune and brings its window to the front. Delivery is configurable in **Ozyune → Settings…** (by default only when Ozyune is not frontmost; "Always" and "Never" are also available). The first launch requests notification permission; if nothing ever appears, allow notifications for Ozyune in **System Settings → Notifications**. The **Send Test Notification** button in Settings verifies the whole notification path on demand.
+
+> **Note**: local builds must be code-signed (i.e. `Local.xcconfig` must set `DEVELOPMENT_TEAM`). macOS's notification service rejects ad-hoc / unsigned apps — for those builds the permission prompt silently never appears and notifications are never delivered. CI's `CODE_SIGNING_ALLOWED=NO` build is for compile checking only.
+
+Signals are derived from the live WebSocket traffic between the dsh Web UI and its host — a read-only side channel that leaves your dsh configuration untouched. The dsh wire vocabulary those signals depend on is pinned by `scripts/check-signal-classifier.sh`, which runs in CI; set `OZYUNE_DEBUG_SIGNALS=1` to trace matched frames and classification verdicts to Console.
 
 ## Project structure
 
@@ -121,11 +142,13 @@ Ozyune/
 │   └── architecture.md
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
+│   ├── AgentSignal.swift
 │   ├── AppDelegate.swift
 │   ├── Assets.xcassets/
 │   ├── ContentView.swift
 │   ├── DshOutputInterpreter.swift
 │   ├── Info.plist
+│   ├── NotificationController.swift
 │   ├── OzyuneApp.swift
 │   ├── OzyuneProcessManager.swift
 │   ├── OzyuneWebView.swift

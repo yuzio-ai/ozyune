@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# preflight.sh — Ozyune.app 发布前检查（7 项）
+# preflight.sh — Ozyune.app 发布前检查（8 项）
 #
 # 用法:
 #   ./scripts/preflight.sh [路径/Ozyune.app]
@@ -9,13 +9,17 @@
 # 任意一项失败退出码为 1，并在末尾汇总失败项。
 #
 # 检查项:
-#   1. 签名完整性 (codesign --verify --deep --strict)
-#   2. 签名身份 (Developer ID Application / Team / 时间戳)
-#   3. Gatekeeper 评估 (spctl: accepted + Notarized Developer ID)
-#   4. 架构 (通用二进制: x86_64 + arm64)
-#   5. Info.plist 关键值与 project.pbxproj 构建设置一致
-#   6. 公证票据已装订 (xcrun stapler validate)
-#   7. zip 回环 (ditto 打包再解压后，签名与 Gatekeeper 评估仍有效)
+#   1. 信号分类器 fixture (scripts/check-signal-classifier.sh)
+#   2. 签名完整性 (codesign --verify --deep --strict)
+#   3. 签名身份 (Developer ID Application / Team / 时间戳)
+#   4. Gatekeeper 评估 (spctl: accepted + Notarized Developer ID)
+#   5. 架构 (通用二进制: x86_64 + arm64)
+#   6. Info.plist 关键值与 project.pbxproj 构建设置一致
+#   7. 公证票据已装订 (xcrun stapler validate)
+#   8. zip 回环 (ditto 打包再解压后，签名与 Gatekeeper 评估仍有效)
+#
+# 第 1 项只依赖仓库源码，因此在 app bundle 存在性检查之前执行：即使还没
+# 构建出 .app，也能先确认通知管线依赖的 dsh wire 词汇表没有漂移。
 
 set -uo pipefail
 
@@ -54,20 +58,32 @@ echo " Ozyune 发布前检查"
 echo " 目标: $APP"
 echo "──────────────────────────────────────────────"
 
+# ── 1. 信号分类器 fixture ───────────────────────
+echo "1. 信号分类器 fixture"
+rc=0
+fixture_out="$(bash "$REPO_ROOT/scripts/check-signal-classifier.sh" 2>&1)" || rc=1
+if [ $rc -eq 0 ]; then
+    ok "$(echo "$fixture_out" | tail -1)"
+else
+    bad "分类器与 dsh wire 词汇表不再一致："
+    echo "$fixture_out" | tail -6 | sed 's/^/     /'
+fi
+report 1 "信号分类器 fixture" $rc
+
 if [ ! -d "$APP" ]; then
     echo "❌ 找不到 app bundle: $APP"
     exit 1
 fi
 
-# ── 1. 签名完整性 ───────────────────────────────
-echo "1. 签名完整性"
+# ── 2. 签名完整性 ───────────────────────────────
+echo "2. 签名完整性"
 rc=0
 codesign --verify --deep --strict --verbose=2 "$APP" >/dev/null 2>&1 || rc=1
 [ $rc -eq 0 ] && ok "codesign --verify --deep --strict 通过" || bad "签名验证失败"
-report 1 "签名完整性" $rc
+report 2 "签名完整性" $rc
 
-# ── 2. 签名身份 ─────────────────────────────────
-echo "2. 签名身份"
+# ── 3. 签名身份 ─────────────────────────────────
+echo "3. 签名身份"
 identity="$(codesign -dv --verbose=2 "$APP" 2>&1)"
 rc=0
 echo "$identity" | grep -q 'Authority=Developer ID Application' || rc=1
@@ -79,10 +95,10 @@ if [ $rc -eq 0 ]; then
 else
     bad "不是有效的 Developer ID Application 签名（或缺少 Team/时间戳）"
 fi
-report 2 "签名身份" $rc
+report 3 "签名身份" $rc
 
-# ── 3. Gatekeeper 评估 ──────────────────────────
-echo "3. Gatekeeper 评估"
+# ── 4. Gatekeeper 评估 ──────────────────────────
+echo "4. Gatekeeper 评估"
 assessment="$(spctl -a -vv "$APP" 2>&1)"
 rc=0
 echo "$assessment" | grep -q 'accepted' || rc=1
@@ -93,10 +109,10 @@ else
     bad "Gatekeeper 未接受："
     echo "$assessment" | sed 's/^/     /'
 fi
-report 3 "Gatekeeper 评估" $rc
+report 4 "Gatekeeper 评估" $rc
 
-# ── 4. 架构 ─────────────────────────────────────
-echo "4. 架构"
+# ── 5. 架构 ─────────────────────────────────────
+echo "5. 架构"
 binary="$APP/Contents/MacOS/$(app_plist_value CFBundleExecutable)"
 arches="$(lipo -info "$binary" 2>/dev/null)"
 rc=0
@@ -107,10 +123,10 @@ if [ $rc -eq 0 ]; then
 else
     bad "缺少架构：$arches"
 fi
-report 4 "架构" $rc
+report 5 "架构" $rc
 
-# ── 5. Info.plist 与构建设置一致 ────────────────
-echo "5. Info.plist 关键值"
+# ── 6. Info.plist 与构建设置一致 ────────────────
+echo "6. Info.plist 关键值"
 rc=0
 for pair in "CFBundleShortVersionString:MARKETING_VERSION" \
             "CFBundleVersion:CURRENT_PROJECT_VERSION" \
@@ -127,18 +143,18 @@ for pair in "CFBundleShortVersionString:MARKETING_VERSION" \
         rc=1
     fi
 done
-report 5 "Info.plist 关键值" $rc
+report 6 "Info.plist 关键值" $rc
 
-# ── 6. 公证票据装订 ─────────────────────────────
-echo "6. 公证票据 (stapler)"
+# ── 7. 公证票据装订 ─────────────────────────────
+echo "7. 公证票据 (stapler)"
 rc=0
 staple_out="$(xcrun stapler validate "$APP" 2>&1)" || rc=1
 echo "$staple_out" | grep -q 'worked' || rc=1
 [ $rc -eq 0 ] && ok "票据已 stapled，离线也能通过 Gatekeeper" || bad "未装订公证票据"
-report 6 "公证票据装订" $rc
+report 7 "公证票据装订" $rc
 
-# ── 7. zip 回环 ─────────────────────────────────
-echo "7. zip 回环"
+# ── 8. zip 回环 ─────────────────────────────────
+echo "8. zip 回环"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 app_name="$(basename "$APP")"
@@ -152,15 +168,16 @@ roundtrip_spctl="$(spctl -a -vv "$unzipped" 2>&1)"
 echo "$roundtrip_spctl" | grep -q 'accepted' || rc=1
 echo "$roundtrip_spctl" | grep -q 'source=Notarized Developer ID' || rc=1
 [ $rc -eq 0 ] && ok "打包 → 解压后签名与公证状态完好" || bad "zip 回环后签名/Gatekeeper 失效"
-report 7 "zip 回环" $rc
+report 8 "zip 回环" $rc
 
 # ── 汇总 ────────────────────────────────────────
+TOTAL=$((PASS + FAIL))
 echo "──────────────────────────────────────────────"
 if [ $FAIL -eq 0 ]; then
-    echo " 🎉 全部通过 ($PASS/7)，可以发布"
+    echo " 🎉 全部通过 ($PASS/$TOTAL)，可以发布"
     exit 0
 else
-    echo " ⚠️  通过 $PASS/7，失败 $FAIL 项："
+    echo " ⚠️  通过 $PASS/$TOTAL，失败 $FAIL 项："
     for item in "${FAILED_ITEMS[@]}"; do
         echo "   - $item"
     done

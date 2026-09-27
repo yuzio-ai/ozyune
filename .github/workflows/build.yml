@@ -28,3 +28,8 @@ jobs:
             -destination 'platform=macOS' \
             CODE_SIGNING_ALLOWED=NO \
             build
+
+      # Pins the dsh wire vocabulary the notification pipeline depends on, so a
+      # renamed event fails here instead of silently disabling notifications.
+      - name: Check signal classifier
+        run: bash scripts/check-signal-classifier.sh

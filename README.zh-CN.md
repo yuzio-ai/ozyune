@@ -132,12 +132,14 @@ Ozyune.app
 Ozyune/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
+│   ├── RELEASE_NOTES_TEMPLATE.md
 │   ├── pull_request_template.md
 │   └── workflows/build.yml
 ├── design/
 │   └── ozyune-logo.png
 ├── docs/
-│   └── architecture.md
+│   ├── architecture.md
+│   └── releases/             # 固定样式的发布说明，每个 tag 一份
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
 │   ├── AgentSignal.swift
@@ -151,6 +153,12 @@ Ozyune/
 │   ├── OzyuneProcessManager.swift
 │   ├── OzyuneWebView.swift
 │   └── StartupView.swift
+├── scripts/
+│   ├── check-release-notes.sh
+│   ├── check-signal-classifier.sh
+│   ├── preflight.sh
+│   ├── render-release-notes.sh
+│   └── signal-fixtures/
 ├── Signing.xcconfig          # 已提交；以可选方式包含 Local.xcconfig
 ├── Local.xcconfig            # 已 gitignore；你的 DEVELOPMENT_TEAM 放这里
 ├── CONTRIBUTING.md

@@ -134,12 +134,14 @@ Signals are derived from the live WebSocket traffic between the dsh Web UI and i
 Ozyune/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
+│   ├── RELEASE_NOTES_TEMPLATE.md
 │   ├── pull_request_template.md
 │   └── workflows/build.yml
 ├── design/
 │   └── ozyune-logo.png
 ├── docs/
-│   └── architecture.md
+│   ├── architecture.md
+│   └── releases/             # canonical release notes, one file per tag
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
 │   ├── AgentSignal.swift
@@ -153,6 +155,12 @@ Ozyune/
 │   ├── OzyuneProcessManager.swift
 │   ├── OzyuneWebView.swift
 │   └── StartupView.swift
+├── scripts/
+│   ├── check-release-notes.sh
+│   ├── check-signal-classifier.sh
+│   ├── preflight.sh
+│   ├── render-release-notes.sh
+│   └── signal-fixtures/
 ├── Signing.xcconfig          # committed; includes Local.xcconfig optionally
 ├── Local.xcconfig            # gitignored; your DEVELOPMENT_TEAM lives here
 ├── CONTRIBUTING.md

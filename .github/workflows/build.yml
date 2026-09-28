@@ -33,3 +33,12 @@ jobs:
       # renamed event fails here instead of silently disabling notifications.
       - name: Check signal classifier
         run: bash scripts/check-signal-classifier.sh
+
+      # Pins the release note style: language order, heading levels, the section
+      # vocabulary, the required Requirements / Installation blocks, and the
+      # changelog link. The template is checked too, so the skeleton cannot drift
+      # away from the notes it produces. See CONTRIBUTING.md → Releasing.
+      - name: Check release note style
+        run: |
+          bash scripts/render-release-notes.sh --self-test
+          bash scripts/check-release-notes.sh

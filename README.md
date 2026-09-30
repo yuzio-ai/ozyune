@@ -136,11 +136,13 @@ Ozyune/
 │   ├── ISSUE_TEMPLATE/
 │   ├── RELEASE_NOTES_TEMPLATE.md
 │   ├── pull_request_template.md
+│   ├── release-notes.conf    # per-repo settings for the release note convention
 │   └── workflows/build.yml
 ├── design/
 │   └── ozyune-logo.png
 ├── docs/
 │   ├── architecture.md
+│   ├── release-notes-convention.md
 │   └── releases/             # canonical release notes, one file per tag
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
@@ -158,9 +160,12 @@ Ozyune/
 ├── scripts/
 │   ├── check-release-notes.sh
 │   ├── check-signal-classifier.sh
+│   ├── export-release-note-kit.sh
 │   ├── preflight.sh
+│   ├── release-notes-lib.sh
 │   ├── render-release-notes.sh
-│   └── signal-fixtures/
+│   ├── signal-fixtures/
+│   └── test-release-notes-kit.sh
 ├── Signing.xcconfig          # committed; includes Local.xcconfig optionally
 ├── Local.xcconfig            # gitignored; your DEVELOPMENT_TEAM lives here
 ├── CONTRIBUTING.md

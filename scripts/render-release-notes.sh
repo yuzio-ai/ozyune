@@ -2,29 +2,30 @@
 #
 # render-release-notes.sh — render the canonical release note skeleton.
 #
-# Reads .github/RELEASE_NOTES_TEMPLATE.md, fills in the version and the
-# changelog range, and writes docs/releases/<tag>.md. The skeleton is the only
+# Reads .github/RELEASE_NOTES_TEMPLATE.md, fills in the product, the version and
+# the changelog range, and writes <NOTES_DIR>/<tag>.md. The skeleton is the only
 # place the pinned style lives, so this keeps every new note starting from the
 # same structure — pair it with scripts/check-release-notes.sh before publishing.
 #
 # Usage:
-#   bash scripts/render-release-notes.sh <version>          # writes docs/releases/v<version>.md
+#   bash scripts/render-release-notes.sh <version>          # writes <NOTES_DIR>/v<version>.md
 #   bash scripts/render-release-notes.sh <version> --stdout # prints the note instead
 #   bash scripts/render-release-notes.sh --self-test        # template conformance only
 #
-# <version> is the marketing version from Ozyune.xcodeproj (MARKETING_VERSION).
+# <version> is the marketing version of the product being released.
 # The previous tag is resolved from the repository's tags; for the first release
 # the note links to the tag's commit list instead of a comparison.
+#
+# Everything repository specific (product, asset, languages, paths) comes from
+# .github/release-notes.conf via scripts/release-notes-lib.sh — see
+# docs/release-notes-convention.md.
 #
 # 模板本身的结构由 scripts/check-release-notes.sh --skeleton 校验，因此 --self-test
 # 不需要任何 tag 或版本号。
 
 set -uo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPO_SLUG="yuzio-ai/ozyune"
-TEMPLATE="$REPO_ROOT/.github/RELEASE_NOTES_TEMPLATE.md"
-NOTES_DIR="$REPO_ROOT/docs/releases"
+. "$(dirname "$0")/release-notes-lib.sh"
 CHECK="$REPO_ROOT/scripts/check-release-notes.sh"
 
 if [ ! -f "$TEMPLATE" ]; then
@@ -46,7 +47,7 @@ if [ "${2:-}" = "--stdout" ]; then
 fi
 
 if [ -z "$VERSION" ]; then
-    sed -n '3,19p' "$0"
+    sed -n '3,24p' "$0"
     exit 1
 fi
 
@@ -83,11 +84,13 @@ else
     CHANGELOG="https://github.com/$REPO_SLUG/commits/$TAG"
 fi
 
-OUTPUT="$(mktemp "${TMPDIR:-/tmp}/ozyune-notes.XXXXXX")"
+OUTPUT="$(mktemp "${TMPDIR:-/tmp}/release-notes-render.XXXXXX")"
 trap 'rm -f "$OUTPUT"' EXIT
 render \
     | sed -e "s|{{VERSION}}|$VERSION|g" \
           -e "s|{{CHANGELOG_URL}}|$CHANGELOG|g" \
+          -e "s|{{PRODUCT}}|$PRODUCT_NAME|g" \
+          -e "s|{{ASSET}}|$ASSET_NAME|g" \
     > "$OUTPUT"
 
 if [ "$TO_STDOUT" -eq 1 ]; then
@@ -110,13 +113,13 @@ echo " 已生成: $RELATIVE"
 if [ -n "$PREVIOUS_TAG" ]; then
     echo " 变更范围: $PREVIOUS_TAG...$TAG"
 else
-    echo " 变更范围: 首个版本（$TAG）"
+    echo " 变更范围: 首个版本（${TAG}）"
 fi
 echo "──────────────────────────────────────────────"
 echo " 下一步:"
 echo "   1. 填写正文，删掉用不到的小节与全部 <!-- 提示 -->"
 echo "   2. bash scripts/check-release-notes.sh $RELATIVE"
 echo "   3. git add $RELATIVE"
-echo "   4. ./scripts/preflight.sh          # 打包后、发布前"
+echo "   4. 运行发布前检查（打包后、发布前）"
 echo "   5. 发布（标题恒等于 tag，不要手打）："
-echo "      gh release create $TAG Ozyune.zip --title $TAG --notes-file $RELATIVE"
+echo "      gh release create $TAG $ASSET_NAME --title $TAG --notes-file $RELATIVE"

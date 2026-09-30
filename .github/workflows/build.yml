@@ -42,3 +42,9 @@ jobs:
         run: |
           bash scripts/render-release-notes.sh --self-test
           bash scripts/check-release-notes.sh
+
+      # Proves the release note kit stays portable: adopts it into throwaway
+      # repositories (single- and multi-language), locks the fixed failure
+      # modes, and checks the export helper. See docs/release-notes-convention.md.
+      - name: Test release note kit
+        run: bash scripts/test-release-notes-kit.sh

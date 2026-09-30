@@ -134,11 +134,13 @@ Ozyune/
 │   ├── ISSUE_TEMPLATE/
 │   ├── RELEASE_NOTES_TEMPLATE.md
 │   ├── pull_request_template.md
+│   ├── release-notes.conf    # 发布说明规范的仓库级配置
 │   └── workflows/build.yml
 ├── design/
 │   └── ozyune-logo.png
 ├── docs/
 │   ├── architecture.md
+│   ├── release-notes-convention.md
 │   └── releases/             # 固定样式的发布说明，每个 tag 一份
 ├── Ozyune.xcodeproj/
 ├── Ozyune/
@@ -156,9 +158,12 @@ Ozyune/
 ├── scripts/
 │   ├── check-release-notes.sh
 │   ├── check-signal-classifier.sh
+│   ├── export-release-note-kit.sh
 │   ├── preflight.sh
+│   ├── release-notes-lib.sh
 │   ├── render-release-notes.sh
-│   └── signal-fixtures/
+│   ├── signal-fixtures/
+│   └── test-release-notes-kit.sh
 ├── Signing.xcconfig          # 已提交；以可选方式包含 Local.xcconfig
 ├── Local.xcconfig            # 已 gitignore；你的 DEVELOPMENT_TEAM 放这里
 ├── CONTRIBUTING.md

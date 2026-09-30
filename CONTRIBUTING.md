@@ -49,7 +49,8 @@ Release notes are not free-form. Every published body starts from the same
 skeleton, so consecutive releases read alike and a note cannot quietly drift from
 the last one. The pinned structure lives in `.github/RELEASE_NOTES_TEMPLATE.md`,
 `scripts/check-release-notes.sh` enforces it, and CI plus `scripts/preflight.sh`
-both run that check.
+both run that check. The convention itself — including how to reuse it in
+another repository — is documented in `docs/release-notes-convention.md`.
 
 1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `Ozyune.xcodeproj`
    and commit.

@@ -7,34 +7,34 @@
 # cannot quietly drift away from the previous one.
 #
 # Usage:
-#   bash scripts/check-release-notes.sh                     # all docs/releases/*.md
+#   bash scripts/check-release-notes.sh                     # all notes in NOTES_DIR
 #   bash scripts/check-release-notes.sh <file> [<file>...]  # specific files
 #   bash scripts/check-release-notes.sh --skeleton <file>   # structure only: allow
 #                                                           # unfilled sections and {{placeholders}}
 #
-# Pinned invariants:
-#   1. the language nav line first, then English before 简体中文, both anchored;
-#   2. ## for a language, ### for a section, and no other heading level;
-#   3. sections come from one vocabulary and keep its order (see EN_SECTIONS);
-#   4. Requirements / Installation (系统要求 / 安装) are always present;
+# Pinned invariants (every repository specific value comes from
+# .github/release-notes.conf via scripts/release-notes-lib.sh):
+#   1. a multi-language note opens with the language nav line and carries the
+#      language blocks in the configured order, each with its own anchor;
+#   2. ## for a language, ### for a section, and no other heading level — a
+#      single-language note carries ### sections only;
+#   3. sections come from the configured vocabulary of their language and keep
+#      its order;
+#   4. the sections flagged required in LANGUAGES are always present;
 #   5. every section that survives has content;
-#   6. the language block closes with compare/<previous-tag>...<tag>
+#   6. each language block closes with compare/<previous-tag>...<tag>
 #      (commits/<tag> for the first release), and <tag> matches the file name;
-#   7. the asset is always Ozyune.zip, never Ozyune-<version>.zip.
+#   7. the asset is always <ASSET_NAME>, never <stem>-<version>.
 #
+# See docs/release-notes-convention.md.
 # 全部通过退出码为 0，任意一项失败退出码为 1。
 
 set -uo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPO_SLUG="yuzio-ai/ozyune"
-NOTES_DIR="$REPO_ROOT/docs/releases"
+. "$(dirname "$0")/release-notes-lib.sh"
 
-# The fixed vocabulary, in the only order sections may appear.
-EN_SECTIONS=("New" "Changed" "Fixed" "How it works" "Engineering" "Known limitations" "Requirements" "Installation")
-ZH_SECTIONS=("新增" "变更" "修复" "实现方式" "工程质量" "已知限制" "系统要求" "安装")
-# Indexes into the vocabulary that every release note must carry.
-REQUIRED_INDEXES=(6 7)
+# The asset is checked as a literal name; escape it for grep -E.
+ASSET_PATTERN="$(printf '%s' "$ASSET_STEM" | sed 's#[][\.*^$(){}?+|/]#\\&#g')"
 
 SKELETON=0
 PROBLEMS=()
@@ -154,11 +154,16 @@ empty_sections() {
         }' "$1"
 }
 
-# check_sections <headings> <from> <to> <lang> — vocabulary, order and required sections.
+# check_sections <headings> <from> <to> <lang-index> — vocabulary, order and
+# required sections inside one language block. to=0 means EOF.
 check_sections() {
-    local headings="$1" from="$2" to="$3" lang="$4"
-    local -a vocabulary
-    if [ "$lang" = "en" ]; then vocabulary=("${EN_SECTIONS[@]}"); else vocabulary=("${ZH_SECTIONS[@]}"); fi
+    local headings="$1" from="$2" to="$3" i="$4"
+    local lang="${LANG_ID[$i]}"
+    local -a vocabulary required
+    split_vocabulary "$i"
+    vocabulary=("${VOCABULARY[@]}")
+    split_required "$i"
+    required=("${REQUIRED[@]}")
 
     local line level text index last=-1
     while IFS=$'\t' read -r line level text; do
@@ -177,10 +182,10 @@ check_sections() {
         last="$index"
     done < "$headings"
 
-    local required
-    for required in "${REQUIRED_INDEXES[@]}"; do
-        if ! block_has "$headings" "$from" "$to" 3 "${vocabulary[$required]}"; then
-            problem "[$lang] missing required section \"${vocabulary[$required]}\""
+    local required_index
+    for required_index in "${required[@]}"; do
+        if ! block_has "$headings" "$from" "$to" 3 "${vocabulary[$required_index]}"; then
+            problem "[$lang] missing required section \"${vocabulary[$required_index]}\""
         fi
     done
 }
@@ -204,6 +209,24 @@ validate_changelog() {
     fi
 }
 
+# marker_line_and_url <marker> — the first line starting with the marker sets
+# MARKER_LINE (its line number) and MARKER_URL (the remainder of the line).
+marker_line_and_url() {
+    MARKER_LINE=""
+    MARKER_URL=""
+    local marker="$1" line number=0
+    while IFS= read -r line || [ -n "$line" ]; do
+        number=$((number + 1))
+        case "$line" in
+            "$marker"*)
+                MARKER_LINE="$number"
+                MARKER_URL="${line#"$marker"}"
+                return 0
+                ;;
+        esac
+    done < "$STRIPPED"
+}
+
 check_file() { # check_file <path>
     local file="$1"
     local base
@@ -217,80 +240,135 @@ check_file() { # check_file <path>
     strip_comments "$file" | tr -d '\r' > "$STRIPPED"
     headings_of "$STRIPPED" > "$HEADINGS"
 
-    # ── language nav line ────────────────────────
-    local nav_line
-    nav_line="$(grep -nF -m1 '<a href="#english">English</a> | <a href="#简体中文">简体中文</a>' "$STRIPPED" | cut -d: -f1)"
-    if [ -z "$nav_line" ]; then
-        problem 'missing the language nav line: <a href="#english">English</a> | <a href="#简体中文">简体中文</a>'
-    elif [ "$nav_line" -gt 1 ] && [ "$(head -n $((nav_line - 1)) "$STRIPPED" | grep -c '[^[:space:]]')" -ne 0 ]; then
-        problem "the language nav line must be the first non-blank line"
+    local i lang heading anchor
+    local -a H=() A=()
+
+    # ── language nav line (multi-language notes only) ──
+    if [ "$LANG_COUNT" -ge 2 ]; then
+        local nav="" nav_line
+        i=0
+        while [ "$i" -lt "$LANG_COUNT" ]; do
+            [ "$i" -eq 0 ] || nav="$nav | "
+            nav="$nav<a href=\"#${LANG_ANCHOR[$i]}\">${LANG_HEADING[$i]}</a>"
+            i=$((i + 1))
+        done
+        nav_line="$(grep -nF -m1 -- "$nav" "$STRIPPED" | cut -d: -f1)"
+        if [ -z "$nav_line" ]; then
+            problem "missing the language nav line: $nav"
+        elif [ "$nav_line" -gt 1 ] && [ "$(head -n $((nav_line - 1)) "$STRIPPED" | grep -c '[^[:space:]]')" -ne 0 ]; then
+            problem "the language nav line must be the first non-blank line"
+        fi
     fi
 
-    # ── anchors ──────────────────────────────────
-    local en_anchor zh_anchor
-    en_anchor="$(grep -nF -m1 '<a id="english"></a>' "$STRIPPED" | cut -d: -f1)"
-    zh_anchor="$(grep -nF -m1 '<a id="简体中文"></a>' "$STRIPPED" | cut -d: -f1)"
-    [ -n "$en_anchor" ] || problem 'missing the anchor <a id="english"></a>'
-    [ -n "$zh_anchor" ] || problem 'missing the anchor <a id="简体中文"></a>'
+    # ── per-language anchors and heading positions ──
+    local prev_line=0 prev_heading="" h_count
+    i=0
+    while [ "$i" -lt "$LANG_COUNT" ]; do
+        lang="${LANG_ID[$i]}"
+        heading="${LANG_HEADING[$i]}"
+        anchor="${LANG_ANCHOR[$i]}"
+        if [ "$LANG_COUNT" -ge 2 ]; then
+            A[$i]="$(grep -nF -m1 -- "<a id=\"$anchor\"></a>" "$STRIPPED" | cut -d: -f1)"
+            [ -n "${A[$i]}" ] || problem "missing the anchor <a id=\"$anchor\"></a>"
+            H[$i]="$(awk -F'\t' -v t="$heading" '$2 == 2 && $3 == t { print $1; exit }' "$HEADINGS")"
+            h_count="$(awk -F'\t' -v t="$heading" '$2 == 2 && $3 == t' "$HEADINGS" | wc -l | tr -d ' ')"
+            [ "$h_count" = "1" ] || problem "\"## $heading\" must appear exactly once — found $h_count"
+            if [ -n "${H[$i]}" ]; then
+                if [ "$prev_line" -ne 0 ] && [ "${H[$i]}" -le "$prev_line" ]; then
+                    problem "$heading must come after $prev_heading — $prev_heading is at line $prev_line, $heading at line ${H[$i]}"
+                fi
+                if [ -n "${A[$i]}" ] && [ "${A[$i]}" -gt "${H[$i]}" ]; then
+                    problem "[$lang] the $anchor anchor must precede the \"## $heading\" heading"
+                fi
+                prev_line="${H[$i]}"
+                prev_heading="$heading"
+            fi
+        else
+            H[$i]=0
+            A[$i]=""
+        fi
+        i=$((i + 1))
+    done
 
-    # ── heading levels and language labels ───────
+    # ── heading levels and language labels ──
     local line level text
     while IFS=$'\t' read -r line level text; do
         case "$level" in
             2)
-                case "$text" in
-                    English|简体中文) ;;
-                    *) problem "line $line: language heading must be \"English\" or \"简体中文\" — got \"$text\"" ;;
-                esac
+                if [ "$LANG_COUNT" -lt 2 ]; then
+                    problem "line $line: h2 heading — a single-language note carries only ### sections — \"$text\""
+                elif ! printf '%s\n' "${LANG_HEADING[@]}" | grep -qFx -- "$text"; then
+                    problem "line $line: language heading must be one of: ${LANG_HEADING[*]} — got \"$text\""
+                fi
                 ;;
             3) ;;
-            *) problem "line $line: h$level heading — only ## for a language and ### for a section are allowed — \"$text\"" ;;
+            *)
+                if [ "$LANG_COUNT" -ge 2 ]; then
+                    problem "line $line: h$level heading — only ## for a language and ### for a section are allowed — \"$text\""
+                else
+                    problem "line $line: h$level heading — only ### for a section is allowed in a single-language note — \"$text\""
+                fi
+                ;;
         esac
     done < "$HEADINGS"
 
-    # ── language order ───────────────────────────
-    local en_line zh_line en_count zh_count
-    en_line="$(awk -F'\t' '$2 == 2 && $3 == "English" { print $1 }' "$HEADINGS" | head -1)"
-    zh_line="$(awk -F'\t' '$2 == 2 && $3 == "简体中文" { print $1 }' "$HEADINGS" | head -1)"
-    en_count="$(awk -F'\t' '$2 == 2 && $3 == "English"' "$HEADINGS" | wc -l | tr -d ' ')"
-    zh_count="$(awk -F'\t' '$2 == 2 && $3 == "简体中文"' "$HEADINGS" | wc -l | tr -d ' ')"
-    [ "$en_count" = "1" ] || problem "\"## English\" must appear exactly once — found $en_count"
-    [ "$zh_count" = "1" ] || problem "\"## 简体中文\" must appear exactly once — found $zh_count"
-    if [ -n "$en_line" ] && [ -n "$zh_line" ]; then
-        if [ "$en_line" -gt "$zh_line" ]; then
-            problem "English must come first — English is at line $en_line, 简体中文 at line $zh_line"
-        else
-            if [ -n "$en_anchor" ] && [ "$en_anchor" -gt "$en_line" ]; then
-                problem "[en] the English anchor must precede the \"## English\" heading"
+    # ── section vocabulary and required sections ──
+    local from to
+    i=0
+    while [ "$i" -lt "$LANG_COUNT" ]; do
+        if [ "$LANG_COUNT" -ge 2 ]; then
+            from="${H[$i]}"
+            if [ -z "$from" ]; then
+                i=$((i + 1))
+                continue
             fi
-            check_sections "$HEADINGS" "$en_line" "$zh_line" en
-            check_sections "$HEADINGS" "$zh_line" 0 zh
+            if [ "$i" -lt $((LANG_COUNT - 1)) ]; then
+                to="${H[$((i + 1))]}"
+                # The next block is missing or out of order — already reported.
+                if [ -z "$to" ] || [ "$from" -ge "$to" ]; then
+                    i=$((i + 1))
+                    continue
+                fi
+            else
+                to=0
+            fi
+        else
+            from=0
+            to=0
         fi
-    fi
+        check_sections "$HEADINGS" "$from" "$to" "$i"
+        i=$((i + 1))
+    done
 
-    # ── closing changelog lines ──────────────────
+    # ── closing changelog lines ──
     local tag="${base%.md}"
     local first=0
     if [ "$tag" = "$(lowest_note_tag "$(dirname "$file")")" ]; then
         first=1
     fi
-    local en_url zh_url en_log zh_log
-    en_url="$(sed -n 's/^\*\*Full changelog\*\*: //p' "$STRIPPED" | head -1)"
-    zh_url="$(sed -n 's/^\*\*完整变更\*\*：//p' "$STRIPPED" | head -1)"
-    en_log="$(grep -nF -m1 '**Full changelog**: ' "$STRIPPED" | cut -d: -f1)"
-    zh_log="$(grep -nF -m1 '**完整变更**：' "$STRIPPED" | cut -d: -f1)"
-    validate_changelog "$en_url" en "$tag" "$first"
-    validate_changelog "$zh_url" zh "$tag" "$first"
-    if [ -n "$en_log" ] && [ -n "$zh_anchor" ] && [ "$en_log" -ge "$zh_anchor" ]; then
-        problem "[en] the changelog line must close the English block, before the 简体中文 anchor"
-    fi
-    if [ -n "$zh_log" ] && [ -n "$zh_anchor" ] && [ "$zh_log" -le "$zh_anchor" ]; then
-        problem "[zh] the changelog line must close the 简体中文 block, after the 简体中文 anchor"
-    fi
+    local marker_url marker_line
+    i=0
+    while [ "$i" -lt "$LANG_COUNT" ]; do
+        lang="${LANG_ID[$i]}"
+        marker_line_and_url "${LANG_MARKER[$i]}"
+        marker_line="$MARKER_LINE"
+        marker_url="$MARKER_URL"
+        validate_changelog "$marker_url" "$lang" "$tag" "$first"
+        if [ "$LANG_COUNT" -ge 2 ] && [ -n "$marker_line" ]; then
+            if [ -n "${A[$i]}" ] && [ "$marker_line" -le "${A[$i]}" ]; then
+                problem "[$lang] the changelog line must close the ${LANG_HEADING[$i]} block, after the ${LANG_HEADING[$i]} anchor"
+            fi
+            if [ "$i" -lt $((LANG_COUNT - 1)) ] && [ -n "${A[$((i + 1))]}" ] && [ "$marker_line" -ge "${A[$((i + 1))]}" ]; then
+                problem "[$lang] the changelog line must close the ${LANG_HEADING[$i]} block, before the ${LANG_HEADING[$((i + 1))]} anchor"
+            fi
+        fi
+        i=$((i + 1))
+    done
 
-    # ── asset name ───────────────────────────────
-    if grep -qE 'Ozyune-[0-9]' "$STRIPPED"; then
-        problem "the asset is called Ozyune.zip — found $(grep -m1 -oE 'Ozyune-[0-9][0-9A-Za-z._-]*' "$STRIPPED")"
+    # ── asset name ──
+    local bad_asset
+    if bad_asset="$(grep -m1 -oE "$ASSET_PATTERN-[0-9][0-9A-Za-z._-]*" "$STRIPPED")"; then
+        problem "the asset is called $ASSET_NAME — found $bad_asset"
     fi
 
     # ── actually filled in ───────────────────────
@@ -330,7 +408,7 @@ if [ "$#" -gt 0 ]; then
         case "$argument" in
             --skeleton) SKELETON=1 ;;
             -h|--help)
-                sed -n '3,22p' "$0"
+                sed -n '3,30p' "$0"
                 exit 0
                 ;;
             *) FILES+=("$argument") ;;
@@ -350,13 +428,13 @@ if [ "${#FILES[@]}" -eq 0 ]; then
     fi
 fi
 
-WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/ozyune-release-notes.XXXXXX")"
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/release-notes.XXXXXX")"
 trap 'rm -rf "$WORK_DIR"' EXIT
 STRIPPED="$WORK_DIR/stripped.md"
 HEADINGS="$WORK_DIR/headings.tsv"
 
 echo "──────────────────────────────────────────────"
-echo " Ozyune 发布说明样式"
+echo " $PRODUCT_NAME 发布说明样式"
 if [ "$SKELETON" -eq 1 ]; then
     echo " 模式: 只校验骨架"
 fi
@@ -376,7 +454,6 @@ if [ "$FAILED_FILES" -eq 0 ]; then
     exit 0
 else
     echo " ⚠️  ${#FILES[@]} 份中有 $FAILED_FILES 份偏离固定样式"
-    echo "     模板: .github/RELEASE_NOTES_TEMPLATE.md"
+    echo "     模板: ${TEMPLATE#"$REPO_ROOT"/}"
     exit 1
 fi
-

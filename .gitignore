@@ -3,7 +3,7 @@
 
 # Distribution artifacts
 Ozyune.app/
-Ozyune-*.zip
+Ozyune*.zip
 
 # Editors
 *.swp

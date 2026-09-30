@@ -1,25 +1,29 @@
 <!--
-Ozyune release notes — canonical template (pinned style).
+Release notes — canonical template (pinned style).
 
 The structure is fixed so every release body looks the same:
 
-  - language order: English first, then 简体中文;
+  - language order follows LANGUAGES in .github/release-notes.conf;
   - heading levels: ## for a language, ### for a section — nothing deeper;
-  - one vocabulary for sections, always in the order listed below:
+  - one vocabulary per language for sections, always in the order listed below:
       New / 新增                Changed / 变更
       Fixed / 修复              How it works / 实现方式
       Engineering / 工程质量    Known limitations / 已知限制
       Requirements / 系统要求   Installation / 安装   (both required)
   - Requirements / Installation, the language anchors, and the trailing
-    "Full changelog" line are boilerplate: keep them verbatim.
-  - the asset is always called Ozyune.zip (the release asset has no version).
+    changelog line are boilerplate: keep them verbatim.
+  - the asset is always called {{ASSET}} (the release asset has no version).
+
+{{PRODUCT}}, {{VERSION}}, {{ASSET}} and {{CHANGELOG_URL}} are substituted by
+scripts/render-release-notes.sh; {{ONE_LINE_SUMMARY}} / {{一句话概述}} you fill
+in by hand.
 
 Workflow:
 
-    scripts/render-release-notes.sh 1.2.0      # write docs/releases/v1.2.0.md
+    scripts/render-release-notes.sh 1.2.0      # write <NOTES_DIR>/v1.2.0.md
     # fill in the prose, delete the sections you do not need
-    scripts/check-release-notes.sh docs/releases/v1.2.0.md
-    gh release create v1.2.0 Ozyune.zip --title v1.2.0 --notes-file docs/releases/v1.2.0.md
+    scripts/check-release-notes.sh <NOTES_DIR>/v1.2.0.md
+    gh release create v1.2.0 {{ASSET}} --title v1.2.0 --notes-file <NOTES_DIR>/v1.2.0.md
 
 scripts/check-release-notes.sh enforces all of the above; CI runs it too.
 -->
@@ -29,7 +33,7 @@ scripts/check-release-notes.sh enforces all of the above; CI runs it too.
 <a id="english"></a>
 ## English
 
-Ozyune {{VERSION}} {{ONE_LINE_SUMMARY}}.
+{{PRODUCT}} {{VERSION}} {{ONE_LINE_SUMMARY}}.
 
 ### New
 
@@ -58,11 +62,11 @@ Ozyune {{VERSION}} {{ONE_LINE_SUMMARY}}.
 ### Requirements
 
 - macOS 14 or later.
-- dsh installed separately — Ozyune is only a shell and does **not** bundle the runtime:
+- dsh installed separately — {{PRODUCT}} is only a shell and does **not** bundle the runtime:
   ```bash
   npm install --global @deepseek-ai/dsh
   ```
-- The first launch asks for notification permission; if nothing ever appears, allow Ozyune in
+- The first launch asks for notification permission; if nothing ever appears, allow {{PRODUCT}} in
   System Settings → Notifications.
 - Building from source requires code signing (`DEVELOPMENT_TEAM` in `Local.xcconfig`): macOS's
   notification service rejects ad-hoc and unsigned builds, and those builds never see the
@@ -70,16 +74,16 @@ Ozyune {{VERSION}} {{ONE_LINE_SUMMARY}}.
 
 ### Installation
 
-1. Download `Ozyune.zip` from the assets below
-2. Unzip and move `Ozyune.app` to `/Applications`
-3. Launch Ozyune — it boots dsh and loads the Web UI automatically
+1. Download `{{ASSET}}` from the assets below
+2. Unzip and move `{{PRODUCT}}.app` to `/Applications`
+3. Launch {{PRODUCT}} — it boots dsh and loads the Web UI automatically
 
 **Full changelog**: {{CHANGELOG_URL}}
 
 <a id="简体中文"></a>
 ## 简体中文
 
-Ozyune {{VERSION}} {{一句话概述}}。
+{{PRODUCT}} {{VERSION}} {{一句话概述}}。
 
 ### 新增
 
@@ -108,18 +112,18 @@ Ozyune {{VERSION}} {{一句话概述}}。
 ### 系统要求
 
 - macOS 14 或更高版本。
-- 需自行安装 dsh —— Ozyune 只是一个外壳，本身**不内置**运行时：
+- 需自行安装 dsh —— {{PRODUCT}} 只是一个外壳，本身**不内置**运行时：
   ```bash
   npm install --global @deepseek-ai/dsh
   ```
-- 首次启动会请求通知权限；若始终收不到，请在 系统设置 → 通知 中允许 Ozyune。
+- 首次启动会请求通知权限；若始终收不到，请在 系统设置 → 通知 中允许 {{PRODUCT}}。
 - 从源码自行构建需要签名（`Local.xcconfig` 中的 `DEVELOPMENT_TEAM`）：macOS 通知服务不接受
   ad-hoc / 无签名构建，这类构建下授权弹窗不会出现。
 
 ### 安装
 
-1. 下载下方 Assets 中的 `Ozyune.zip`
-2. 解压后将 `Ozyune.app` 移入「应用程序」
-3. 启动 Ozyune —— 它会自动拉起 dsh 并加载 Web 界面
+1. 下载下方 Assets 中的 `{{ASSET}}`
+2. 解压后将 `{{PRODUCT}}.app` 移入「应用程序」
+3. 启动 {{PRODUCT}} —— 它会自动拉起 dsh 并加载 Web 界面
 
 **完整变更**：{{CHANGELOG_URL}}

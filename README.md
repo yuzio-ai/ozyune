@@ -16,6 +16,23 @@
   English | <a href="README.zh-CN.md">简体中文</a>
 </p>
 
+---
+
+> ## 🗄️ This project is archived
+>
+> **DeepSeek Harness now has an official desktop app.**
+> Ozyune's only reason to exist was to wrap `dsh web` in a native macOS window,
+> and the official app now covers that upstream. This repository is therefore
+> archived and no longer maintained — issues and pull requests are not handled,
+> and `v1.1.1` was the final release.
+>
+> **Use the official app instead:** [DeepSeek Harness for desktop](https://www.deepseek.com/download/) (macOS 13+ / Windows).
+>
+> The code remains available under the MIT License for reference and for anyone
+> who wants to fork it.
+
+---
+
 ## Overview
 
 Ozyune is a small macOS application that wraps the existing `dsh web` experience in a native app window.
@@ -33,9 +50,11 @@ Ozyune does **not** reimplement the dsh interface or agent runtime. The goal is 
 
 ## Current status
 
-**v1.0.0 — first public build**
+**Archived — `v1.1.1` was the final release.**
 
-The current build is intentionally minimal. There is no native session list, menu-bar companion, bundled Node runtime, updater, or custom dsh UI.
+Ozyune was a community project that kept the native shell thin: it launched dsh, embedded its Web UI, and added macOS notifications. With the official
+[DeepSeek Harness desktop app](https://www.deepseek.com/download/) available, that niche is gone and development has stopped. The sections below describe the
+project as it was, and remain accurate for the archived code.
 
 ## Prerequisites: install DeepSeek Harness first
 
@@ -182,7 +201,8 @@ Ozyune/
 
 ## Roadmap
 
-Near-term possibilities, not commitments:
+No longer pursued — the project is archived. These were the near-term
+possibilities at the time development stopped, kept here for context:
 
 - bundle a controlled Node + dsh runtime instead of depending on the user's shell environment;
 - improve native startup / recovery diagnostics;

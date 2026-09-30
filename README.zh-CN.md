@@ -16,6 +16,19 @@
   <a href="README.md">English</a> | 简体中文
 </p>
 
+---
+
+> ## 🗄️ 本项目已归档
+>
+> **DeepSeek Harness 官方桌面版已上线。**
+> Ozyune 存在的唯一理由，是把 `dsh web` 装进一个原生 macOS 窗口；如今官方桌面版已经覆盖了这个场景。因此本仓库已归档、不再维护——不再处理 issue 与 pull request，`v1.1.1` 是最后一个版本。
+>
+> **请改用官方版本：** [DeepSeek Harness 桌面版](https://www.deepseek.com/download/)（macOS 13+ / Windows）。
+>
+> 代码仍以 MIT 许可证保留，供参考或自行 fork。
+
+---
+
 ## 概览
 
 Ozyune 是一个小型 macOS 应用，把现有的 `dsh web` 体验装进原生应用窗口。
@@ -33,9 +46,11 @@ Ozyune **不会**重新实现 dsh 的界面或 agent 运行时。目标是让原
 
 ## 当前状态
 
-**v1.0.0 —— 首个公开版本**
+**已归档 —— `v1.1.1` 是最后一个版本。**
 
-当前构建刻意保持极简：没有原生会话列表、菜单栏组件、内置 Node 运行时、自动更新，也没有定制的 dsh UI。
+Ozyune 是一个社区项目，把原生外壳保持得尽量轻薄：拉起 dsh、内嵌它的 Web UI，并补上 macOS 通知。随着官方
+[DeepSeek Harness 桌面版](https://www.deepseek.com/download/) 上线，这个定位已不复存在，开发也随之停止。下文描述的是项目当时的样子，
+对归档代码而言依然准确。
 
 ## 前置条件：先安装 DeepSeek Harness
 
@@ -180,7 +195,7 @@ Ozyune/
 
 ## 路线图
 
-近期可能的方向（非承诺）：
+已不再推进 —— 项目已归档。下面是开发停止时的近期方向，保留作为背景：
 
 - 内置受控的 Node + dsh 运行时，不再依赖用户的 shell 环境；
 - 改进原生的启动 / 故障恢复诊断；
